@@ -1,0 +1,47 @@
+# Titanic Survival Prediction
+
+# Import Libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load Dataset
+data = pd.read_csv("train.csv")  # Download from Kaggle Titanic Dataset
+
+# Display first 5 rows
+print(data.head())
+
+# Data Preprocessing
+# Drop unnecessary columns
+data = data.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1)
+
+# Fill missing values
+data['Age'].fillna(data['Age'].mean(), inplace=True)
+data['Embarked'].fillna(data['Embarked'].mode()[0], inplace=True)
+
+# Convert categorical data to numeric
+le = LabelEncoder()
+data['Sex'] = le.fit_transform(data['Sex'])
+data['Embarked'] = le.fit_transform(data['Embarked'])
+
+# Split Features and Target
+X = data.drop('Survived', axis=1)
+y = data['Survived']
+
+# Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Model Training
+model = LogisticRegression(max_iter=200)
+model.fit(X_train, y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Evaluation
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
