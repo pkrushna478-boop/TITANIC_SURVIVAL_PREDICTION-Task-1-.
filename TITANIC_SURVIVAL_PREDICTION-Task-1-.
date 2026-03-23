@@ -1,0 +1,124 @@
+# =========================================================
+# 🚢 TITANIC SURVIVAL PREDICTION - FULL PROJECT
+# =========================================================
+
+# 📌 1. IMPORT LIBRARIES
+import pandas as pd                 # Data handling
+import numpy as np                  # Numerical operations
+import matplotlib.pyplot as plt     # Visualization
+import seaborn as sns               # Advanced visualization
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# =========================================================
+# 📌 2. LOAD DATASET
+# =========================================================
+data = pd.read_csv("train.csv")
+
+print("🔹 Dataset Shape:", data.shape)
+print("\n🔹 First 5 Rows:\n", data.head())
+print("\n🔹 Dataset Info:\n")
+print(data.info())
+
+# =========================================================
+# 📌 3. DATA CLEANING
+# =========================================================
+
+# Drop irrelevant columns
+data.drop(['PassengerId', 'Name', 'Ticket', 'Cabin'], axis=1, inplace=True)
+
+# Fill missing values
+data['Age'].fillna(data['Age'].median(), inplace=True)
+data['Embarked'].fillna(data['Embarked'].mode()[0], inplace=True)
+
+# =========================================================
+# 📌 4. EXPLORATORY DATA ANALYSIS (EDA)
+# =========================================================
+
+# Survival count
+sns.countplot(x='Survived', data=data)
+plt.title("Survival Count")
+plt.show()
+
+# Gender vs Survival
+sns.countplot(x='Sex', hue='Survived', data=data)
+plt.title("Gender vs Survival")
+plt.show()
+
+# Pclass vs Survival
+sns.countplot(x='Pclass', hue='Survived', data=data)
+plt.title("Class vs Survival")
+plt.show()
+
+# Age distribution
+sns.histplot(data['Age'], bins=30, kde=True)
+plt.title("Age Distribution")
+plt.show()
+
+# =========================================================
+# 📌 5. FEATURE ENGINEERING
+# =========================================================
+
+# Convert categorical to numeric
+le = LabelEncoder()
+data['Sex'] = le.fit_transform(data['Sex'])
+data['Embarked'] = le.fit_transform(data['Embarked'])
+
+# Feature scaling
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(data.drop('Survived', axis=1))
+
+X = pd.DataFrame(scaled_features, columns=data.columns.drop('Survived'))
+y = data['Survived']
+
+# =========================================================
+# 📌 6. TRAIN-TEST SPLIT
+# =========================================================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# =========================================================
+# 📌 7. MODEL TRAINING
+# =========================================================
+
+# Logistic Regression Model
+log_model = LogisticRegression(max_iter=200)
+log_model.fit(X_train, y_train)
+
+# Random Forest Model (better accuracy)
+rf_model = RandomForestClassifier(n_estimators=100)
+rf_model.fit(X_train, y_train)
+
+# =========================================================
+# 📌 8. PREDICTIONS
+# =========================================================
+log_pred = log_model.predict(X_test)
+rf_pred = rf_model.predict(X_test)
+
+# =========================================================
+# 📌 9. EVALUATION
+# =========================================================
+
+print("\n🔹 Logistic Regression Accuracy:", accuracy_score(y_test, log_pred))
+print("\n🔹 Random Forest Accuracy:", accuracy_score(y_test, rf_pred))
+
+print("\n🔹 Classification Report (Random Forest):\n")
+print(classification_report(y_test, rf_pred))
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, rf_pred)
+sns.heatmap(cm, annot=True, fmt='d')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# =========================================================
+# 📌 10. SAMPLE PREDICTIONS
+# =========================================================
+print("\n🔹 Sample Predictions:\n", rf_pred[:15]) 
